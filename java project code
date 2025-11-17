@@ -1,1 +1,372 @@
+import javax.swing.*;
+import java.awt.*;
+import java.sql.*;
 
+public class Main extends JFrame {
+
+    private static final String URL = "jdbc:mysql://localhost:3306/workoutdb";
+    private static final String USER = "root";
+    private static final String PASSWORD = "root"; // <-- change this
+
+    private JTextField nameField, ageField, weightField, heightField;
+    private JComboBox<String> genderBox, goalBox;
+
+    public Main() {
+        // --- Set theme colors ---
+        Color bgColor = new Color(18, 18, 18);   // black
+        Color gold = new Color(255, 215, 0);     // gold
+        Color textColor = Color.WHITE;
+
+        // --- Window setup ---
+        setTitle("🏋 Workout Recommendation System");
+        setSize(500, 500);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridBagLayout());
+        getContentPane().setBackground(bgColor);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        Font labelFont = new Font("Poppins", Font.PLAIN, 15);
+
+        JLabel title = new JLabel("Personalized Workout Recommendation");
+        title.setFont(new Font("Poppins", Font.BOLD, 18));
+        title.setForeground(gold);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        add(title, gbc);
+
+        gbc.gridwidth = 1;
+
+        JLabel nameLabel = new JLabel("Name:");
+        nameLabel.setForeground(gold);
+        nameLabel.setFont(labelFont);
+        gbc.gridy++;
+        add(nameLabel, gbc);
+        nameField = new JTextField(20);
+        nameField.setBackground(bgColor.darker());
+        nameField.setForeground(textColor);
+        nameField.setCaretColor(gold);
+        addField(nameField, gbc);
+
+        JLabel ageLabel = new JLabel("Age:");
+        ageLabel.setForeground(gold);
+        ageLabel.setFont(labelFont);
+        gbc.gridy++;
+        add(ageLabel, gbc);
+        ageField = new JTextField(10);
+        ageField.setBackground(bgColor.darker());
+        ageField.setForeground(textColor);
+        ageField.setCaretColor(gold);
+        addField(ageField, gbc);
+
+        JLabel genderLabel = new JLabel("Gender:");
+        genderLabel.setForeground(gold);
+        genderLabel.setFont(labelFont);
+        gbc.gridy++;
+        add(genderLabel, gbc);
+        genderBox = new JComboBox<>(new String[]{"Male", "Female", "Other"});
+        styleCombo(genderBox, bgColor, gold, textColor);
+        addField(genderBox, gbc);
+
+        JLabel weightLabel = new JLabel("Weight (kg):");
+        weightLabel.setForeground(gold);
+        weightLabel.setFont(labelFont);
+        gbc.gridy++;
+        add(weightLabel, gbc);
+        weightField = new JTextField(10);
+        weightField.setBackground(bgColor.darker());
+        weightField.setForeground(textColor);
+        weightField.setCaretColor(gold);
+        addField(weightField, gbc);
+
+        JLabel heightLabel = new JLabel("Height (cm):");
+        heightLabel.setForeground(gold);
+        heightLabel.setFont(labelFont);
+        gbc.gridy++;
+        add(heightLabel, gbc);
+        heightField = new JTextField(10);
+        heightField.setBackground(bgColor.darker());
+        heightField.setForeground(textColor);
+        heightField.setCaretColor(gold);
+        addField(heightField, gbc);
+
+        JLabel goalLabel = new JLabel("Fitness Goal:");
+        goalLabel.setForeground(gold);
+        goalLabel.setFont(labelFont);
+        gbc.gridy++;
+        add(goalLabel, gbc);
+        goalBox = new JComboBox<>(new String[]{"Weight Loss", "Muscle Gain", "Endurance", "General Fitness"});
+        styleCombo(goalBox, bgColor, gold, textColor);
+        addField(goalBox, gbc);
+
+        // --- Button ---
+        JButton generateButton = new JButton("Generate Workout");
+        // === THEME STYLING ===
+        gold = new Color(212, 175, 55);
+        Color black = new Color(20, 20, 20);
+        Color grayText = new Color(220, 220, 220);
+
+// Set window background
+        getContentPane().setBackground(black);
+
+// Style labels and fields
+        for (Component c : new Component[]{nameLabel, ageLabel, genderLabel, weightLabel, heightLabel, goalLabel}) {
+            c.setForeground(gold);
+        }
+
+        for (JTextField field : new JTextField[]{nameField, ageField, weightField, heightField}) {
+            field.setBackground(black);
+            field.setForeground(grayText);
+            field.setCaretColor(gold);
+            field.setBorder(BorderFactory.createLineBorder(gold, 1));
+        }
+
+// Style combo boxes
+        for (JComboBox<String> combo : new JComboBox[]{genderBox, goalBox}) {
+            combo.setBackground(black);
+            combo.setForeground(gold);
+            combo.setBorder(BorderFactory.createLineBorder(gold, 1));
+            Color finalGold = gold;
+            combo.setRenderer(new DefaultListCellRenderer() {
+                @Override
+                public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                    Component comp = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                    comp.setBackground(isSelected ? finalGold : black);
+                    comp.setForeground(isSelected ? black : finalGold);
+                    return comp;
+                }
+            });
+        }
+
+// Style button
+        // === FIXED GOLD BUTTON STYLING ===
+        generateButton.setOpaque(true); // important for background color
+        generateButton.setContentAreaFilled(true);
+        generateButton.setBorderPainted(true);
+        generateButton.setBackground(gold);
+        generateButton.setForeground(Color.BLACK);
+        generateButton.setFont(new Font("Poppins", Font.BOLD, 15));
+        generateButton.setFocusPainted(false);
+        generateButton.setBorder(BorderFactory.createLineBorder(gold, 2));
+        generateButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+// Hover effect
+        Color finalGold1 = gold;
+        generateButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                generateButton.setBackground(new Color(255, 215, 0)); // bright gold
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                generateButton.setBackground(finalGold1);
+            }
+        });
+
+// Add button to layout
+        gbc.gridy++;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(generateButton, gbc);
+
+        gbc.gridy++;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(generateButton, gbc);
+
+        // --- Event ---
+        generateButton.addActionListener(e -> generateRecommendation());
+
+        // --- Popup Theme for JOptionPane ---
+        UIManager.put("OptionPane.background", bgColor);
+        UIManager.put("Panel.background", bgColor);
+        UIManager.put("OptionPane.messageForeground", gold);
+        UIManager.put("Button.background", gold);
+        UIManager.put("Button.foreground", Color.BLACK);
+
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    private void addField(JComponent field, GridBagConstraints gbc) {
+        gbc.gridx = 1;
+        add(field, gbc);
+        gbc.gridx = 0;
+    }
+
+    private void styleCombo(JComboBox<?> combo, Color bg, Color border, Color text) {
+        combo.setBackground(bg);
+        combo.setForeground(text);
+        combo.setBorder(BorderFactory.createLineBorder(border, 1));
+        combo.setFocusable(false);
+        combo.setOpaque(true);
+
+        // Prevent white outline on focus
+        combo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                c.setBackground(isSelected ? border : bg);
+                c.setForeground(isSelected ? bg : text);
+                return c;
+            }
+        });
+
+        // Remove white background from popup list
+        combo.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+            @Override
+            protected JButton createArrowButton() {
+                JButton button = new JButton("▼");
+                button.setFont(new Font("Arial", Font.BOLD, 12));
+                button.setBackground(bg);
+                button.setForeground(border); // gold arrow
+                button.setBorder(BorderFactory.createEmptyBorder());
+                button.setFocusPainted(false);
+                button.setOpaque(true);
+                return button;
+            }
+        });
+
+    }
+
+
+    // ✅ Paste the previously updated generateRecommendation() method here
+    // (the one with scrollable popup, BMI, tips, etc.)
+    private void generateRecommendation() {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            System.out.println("Database connected.");
+
+            String name = nameField.getText();
+            int age = Integer.parseInt(ageField.getText());
+            String gender = (String) genderBox.getSelectedItem();
+            double weight = Double.parseDouble(weightField.getText());
+            double height = Double.parseDouble(heightField.getText());
+            String goal = (String) goalBox.getSelectedItem();
+
+            // --- Calculate BMI ---
+            double bmi = weight / Math.pow(height / 100, 2);
+            String bmiCategory;
+            if (bmi < 18.5) bmiCategory = "Underweight";
+            else if (bmi < 25) bmiCategory = "Normal";
+            else if (bmi < 30) bmiCategory = "Overweight";
+            else bmiCategory = "Obese";
+
+            // Insert user
+            String insertUser = "INSERT INTO User (name, age, gender, weight, height, fitness_goal) VALUES (?, ?, ?, ?, ?, ?)";
+            PreparedStatement ps = conn.prepareStatement(insertUser, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, name);
+            ps.setInt(2, age);
+            ps.setString(3, gender);
+            ps.setDouble(4, weight);
+            ps.setDouble(5, height);
+            ps.setString(6, goal);
+            ps.executeUpdate();
+
+            ResultSet keys = ps.getGeneratedKeys();
+            int userId = 0;
+            if (keys.next()) userId = keys.getInt(1);
+
+            // Fetch workouts for the selected goal
+            String fetchWorkout = "SELECT plan_id, name, difficulty, duration, description FROM WorkoutPlan WHERE goal = ?";
+            PreparedStatement ps2 = conn.prepareStatement(fetchWorkout);
+            ps2.setString(1, goal);
+            ResultSet rs = ps2.executeQuery();
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("=== Personalized Workout Summary ===\n\n");
+            sb.append("Name: ").append(name).append("\n");
+            sb.append("Age: ").append(age).append("\n");
+            sb.append("Goal: ").append(goal).append("\n");
+            sb.append(String.format("BMI: %.2f (%s)\n\n", bmi, bmiCategory));
+            sb.append("🏋 Recommended Workouts:\n");
+
+            boolean found = false;
+            while (rs.next()) {
+                found = true;
+                int planId = rs.getInt("plan_id");
+                String planName = rs.getString("name");
+                String difficulty = rs.getString("difficulty");
+                int duration = rs.getInt("duration");
+                String desc = rs.getString("description");
+
+                sb.append(String.format("\n- %s (%s, %d mins)\n  %s\n", planName, difficulty, duration, desc));
+
+                PreparedStatement ps3 = conn.prepareStatement(
+                        "INSERT INTO Recommendation (user_id, plan_id, date_assigned) VALUES (?, ?, CURDATE())"
+                );
+                ps3.setInt(1, userId);
+                ps3.setInt(2, planId);
+                ps3.executeUpdate();
+            }
+
+            // --- Add goal-based tips ---
+            sb.append("\n💡 Tips for ").append(goal).append(":\n");
+            switch (goal) {
+                case "Muscle Gain":
+                    sb.append("- Eat a calorie surplus (300–500 kcal/day above maintenance)\n")
+                            .append("- High-protein diet: 1.5g–2g protein per kg body weight\n")
+                            .append("- Rest at least 7–8 hours every night\n")
+                            .append("- Track your progress weekly (photos, strength log)\n");
+                    break;
+                case "Weight Loss":
+                    sb.append("- Maintain a calorie deficit\n")
+                            .append("- Include cardio + strength training\n")
+                            .append("- Stay hydrated and get quality sleep\n");
+                    break;
+                case "Endurance":
+                    sb.append("- Focus on longer-duration, moderate-intensity workouts\n")
+                            .append("- Gradually increase running or cycling time\n");
+                    break;
+                case "General Fitness":
+                    sb.append("- Mix strength, cardio, and flexibility exercises\n")
+                            .append("- Stay consistent and enjoy your workouts!\n");
+                    break;
+            }
+
+            // --- Show result in scrollable popup ---
+            if (found) {
+                JTextArea textArea = new JTextArea(sb.toString());
+                textArea.setEditable(false);
+                textArea.setLineWrap(true);
+                textArea.setWrapStyleWord(true);
+
+                JScrollPane scrollPane = new JScrollPane(textArea);
+                scrollPane.setPreferredSize(new Dimension(500, 400));
+
+                JOptionPane.showMessageDialog(this, scrollPane, "Workout Recommendation", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "No workout found for the selected goal.\nPlease add data to the WorkoutPlan table.");
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Database error: " + ex.getMessage());
+        }
+    }
+
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "⚠ Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private String getBMICategory(double bmi) {
+        if (bmi < 18.5) return "Underweight";
+        else if (bmi < 25) return "Normal";
+        else if (bmi < 30) return "Overweight";
+        else return "Obese";
+    }
+
+    private String getGoalTips(String goal) {
+        return switch (goal) {
+            case "Muscle Gain" -> "- Eat a calorie surplus (300–500 kcal/day above maintenance)<br>- High-protein diet: 1.5g–2g protein per kg body weight<br>- Rest 7–8 hours every night<br>- Track your progress weekly<br>";
+            case "Weight Loss" -> "- Maintain a calorie deficit<br>- Combine cardio + strength training<br>- Stay hydrated & get quality sleep<br>";
+            case "Endurance" -> "- Focus on long-duration, moderate-intensity workouts<br>- Gradually increase running/cycling time<br>";
+            default -> "- Mix strength, cardio, and flexibility<br>- Stay consistent and enjoy your workouts!<br>";
+        };
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(Main::new);
+    }
+}
